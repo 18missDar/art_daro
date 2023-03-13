@@ -1,23 +1,28 @@
+import io.qameta.allure.Allure;
 import io.qameta.allure.Description;
 import org.junit.Assert;
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.testng.ITestResult;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
+import java.io.ByteArrayInputStream;
 import java.util.List;
 
 public class Task24 {
+
+    private WebDriver driver;
 
     @Test
     @Description("task 2.4 Google")
     public void testGoogle(){
         System.setProperty("webdriver.chrome.driver", "src/main/resources/google_browser/chromedriver.exe");
         WebDriver driver = new ChromeDriver();
+        this.driver = driver;
         driver.manage().window().maximize();
         driver.get("https://artnow.ru/");
 
@@ -44,6 +49,7 @@ public class Task24 {
     public void testFirefox(){
         System.setProperty("webdriver.gecko.driver", "src/main/resources/firefox/geckodriver.exe");
         WebDriver driver = new FirefoxDriver();
+        this.driver = driver;
         driver.manage().window().maximize();
         driver.get("https://artnow.ru/");
 
@@ -62,5 +68,22 @@ public class Task24 {
         driver.quit();
     }
 
+    @AfterMethod
+    public void tearDown(ITestResult result) {
+        if (result.getStatus() == ITestResult.FAILURE) {
+            // Take a screenshot and attach it to the Allure report
+            TakesScreenshot screenshot = (TakesScreenshot) getDriver();
+            byte[] screenshotBytes = screenshot.getScreenshotAs(OutputType.BYTES);
+            addAttachment("Screenshot", "image/png", screenshotBytes, "png");
+        }
+    }
+
+    private void addAttachment(String attachmentName, String attachmentType, byte[] attachmentContent, String attachmentExtension) {
+        Allure.addAttachment(attachmentName, attachmentType, new ByteArrayInputStream(attachmentContent), attachmentExtension);
+    }
+
+    public WebDriver getDriver() {
+        return driver;
+    }
 
 }

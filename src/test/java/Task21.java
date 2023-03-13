@@ -1,21 +1,33 @@
+import io.qameta.allure.Allure;
 import io.qameta.allure.Description;
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.junit.After;
+import org.junit.Assert;
+import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
+import org.testng.ITestResult;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 import pages.SearchResultsPage;
+import io.qameta.allure.Allure;
 
-public class Task21 {
+import java.io.ByteArrayInputStream;
+
+import static io.qameta.allure.Allure.addAttachment;
+
+
+public class Task21{
+
+    private WebDriver driver;
 
     @Test
     @Description("task 2.1 Google")
-    public void testGenreSearch(){
+    public void testGoogle(){
         // Set the path to the Chrome driver executable
         System.setProperty("webdriver.chrome.driver", "src/main/resources/google_browser/chromedriver.exe");
         // Create a new instance of the Chrome driver
         WebDriver driver = new ChromeDriver();
+        this.driver = driver;
         // Maximize the browser window
         driver.manage().window().maximize();
         // Navigate to the paintings by genre page
@@ -35,6 +47,7 @@ public class Task21 {
         searchResultsPage.waitForSearchResults(driver);
         String expectedElement = "Трамвайный путь. Гвоздецкая Татьяна";
         Boolean result = searchResultsPage.isPaintingInSearchResults(expectedElement);
+        Assert.assertEquals(true, result);
         if (result) {
             System.out.println("The painting exists on the page");
         } else {
@@ -47,9 +60,10 @@ public class Task21 {
 
     @Test
     @Description("task 2.1 Firefox")
-    public void testGenreSearch2(){
+    public void testFirefox(){
         System.setProperty("webdriver.gecko.driver", "src/main/resources/firefox/geckodriver.exe");
         WebDriver driver = new FirefoxDriver();
+        this.driver = driver;
         driver.manage().window().maximize();
         driver.get("https://artnow.ru/vyshitye-kartiny-kupit.html");
         WebElement genreCheckbox = driver.findElement(By.id("genre257"));
@@ -67,5 +81,22 @@ public class Task21 {
         driver.quit();
     }
 
+    @AfterMethod
+    public void tearDown(ITestResult result) {
+        if (result.getStatus() == ITestResult.FAILURE) {
+            // Take a screenshot and attach it to the Allure report
+            TakesScreenshot screenshot = (TakesScreenshot) getDriver();
+            byte[] screenshotBytes = screenshot.getScreenshotAs(OutputType.BYTES);
+            addAttachment("Screenshot", "image/png", screenshotBytes, "png");
+        }
+    }
+
+    private void addAttachment(String attachmentName, String attachmentType, byte[] attachmentContent, String attachmentExtension) {
+        Allure.addAttachment(attachmentName, attachmentType, new ByteArrayInputStream(attachmentContent), attachmentExtension);
+    }
+
+    public WebDriver getDriver() {
+        return driver;
+    }
 
 }

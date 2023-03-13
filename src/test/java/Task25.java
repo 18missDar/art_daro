@@ -1,17 +1,22 @@
+import io.qameta.allure.Allure;
 import io.qameta.allure.Description;
 import org.junit.Assert;
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.testng.ITestResult;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
+import java.io.ByteArrayInputStream;
 import java.util.List;
 
 public class Task25 {
+
+    private WebDriver driver;
+
     @Test
     @Description("task 2.5 Google")
     public void testGoogle(){
@@ -19,6 +24,7 @@ public class Task25 {
         System.setProperty("webdriver.chrome.driver", "src/main/resources/google_browser/chromedriver.exe");
         // Create a new instance of the Chrome driver
         WebDriver driver = new ChromeDriver();
+        this.driver = driver;
         // Maximize the browser window
         driver.manage().window().maximize();
         // Navigate to the paintings by genre page
@@ -61,6 +67,7 @@ public class Task25 {
     public void testFireFox(){
         System.setProperty("webdriver.gecko.driver", "src/main/resources/firefox/geckodriver.exe");
         WebDriver driver = new FirefoxDriver();
+        this.driver = driver;
         driver.manage().window().maximize();
         driver.get("https://artnow.ru/");
         WebElement detailButton = driver.findElement(By.cssSelector("#left_container > div > ul:nth-child(2) > li.menu-group.gids > div > i"));
@@ -94,5 +101,23 @@ public class Task25 {
         Assert.assertEquals(priceInitial, firstProductFromChartPrice.getText());
 
         driver.quit();
+    }
+
+    @AfterMethod
+    public void tearDown(ITestResult result) {
+        if (result.getStatus() == ITestResult.FAILURE) {
+            // Take a screenshot and attach it to the Allure report
+            TakesScreenshot screenshot = (TakesScreenshot) getDriver();
+            byte[] screenshotBytes = screenshot.getScreenshotAs(OutputType.BYTES);
+            addAttachment("Screenshot", "image/png", screenshotBytes, "png");
+        }
+    }
+
+    private void addAttachment(String attachmentName, String attachmentType, byte[] attachmentContent, String attachmentExtension) {
+        Allure.addAttachment(attachmentName, attachmentType, new ByteArrayInputStream(attachmentContent), attachmentExtension);
+    }
+
+    public WebDriver getDriver() {
+        return driver;
     }
 }
